@@ -4,7 +4,7 @@
     <v-main>
       <div class="todos-content">
         <h2 class="mb-2">My Todo List</h2>
-        <div class="d-flex align-center mb-4 ga-2">
+        <div class="todos-toolbar d-flex align-center mb-4 ga-2">
           <v-btn color="primary" prepend-icon="mdi-plus" @click="startCreate" size="small">
             Create New Todo
           </v-btn>
@@ -17,7 +17,7 @@
             density="compact"
             hide-details
             clearable
-            style="max-width: 260px;"
+            class="todos-filter"
           />
         </div>
 
@@ -127,7 +127,7 @@
               <v-icon v-else :color="priorityColor(todo.priority)">mdi-flag</v-icon>
             </template>
             <template #append>
-              <div class="d-flex align-center ga-2">
+              <div class="todo-item-meta d-flex align-center ga-2">
                 <v-chip
                   v-if="todo.status"
                   size="x-small"
@@ -424,5 +424,69 @@ function hitsFor(todo: Todo): string[] {
   line-clamp: unset;
   display: block;
   white-space: normal;
+}
+
+.todos-filter {
+  max-width: 260px;
+}
+
+@media (max-width: 600px) {
+  .todos-content {
+    padding: 1rem;
+  }
+
+  .todos-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .todos-filter {
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .todo-list :deep(.v-list-item) {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    padding-block: 12px;
+  }
+
+  .todo-list :deep(.v-list-item__content) {
+    display: contents;
+  }
+
+  .todo-list :deep(.v-list-item__prepend) {
+    order: 1;
+  }
+
+  .todo-list :deep(.v-list-item-title) {
+    order: 2;
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: normal;
+  }
+
+  .todo-list :deep(.v-list-item__append) {
+    order: 3;
+    flex: 0 0 100%;
+    margin-inline-start: 56px;
+    margin-inline-end: 0;
+    padding-top: 0;
+    margin-top: -4px;
+  }
+
+  .todo-list :deep(.v-list-item-subtitle) {
+    order: 4;
+    flex: 0 0 100%;
+    margin-inline-start: 56px;
+    padding-top: 0;
+    margin-top: -4px;
+  }
+
+  .todo-item-meta {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    row-gap: 4px;
+  }
 }
 </style>
