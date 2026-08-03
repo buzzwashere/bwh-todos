@@ -1,6 +1,9 @@
 <template>
   <v-app>
     <v-app-bar color="primary" title="BWH Todos">
+      <template #prepend>
+        <img src="/favicon.svg" alt="BWH Todos logo" class="appbar-logo" />
+      </template>
       <template #append>
         <template v-if="isAuthenticated">
           <span class="user-email d-none d-sm-inline text-body-2 mr-3">
@@ -65,6 +68,20 @@ function logoutClick() {
 </script>
 
 <style scoped>
+.appbar-logo {
+  width: 30px;
+  height: 30px;
+  display: block;
+  margin-inline-start: 13px;
+}
+
+/* Tighten the default 20px gap between the logo and the title by ~4px.
+   Selector mirrors Vuetify's own `.v-toolbar__content > .v-toolbar-title`
+   so it outranks it on specificity. */
+:deep(.v-toolbar__content > .v-toolbar-title) {
+  margin-inline-start: 16px;
+}
+
 .gate {
   min-height: 70vh;
   display: flex;
