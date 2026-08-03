@@ -37,7 +37,7 @@
       <v-text-field
         v-model="filterText"
         append-inner-icon="mdi-magnify"
-        placeholder="Filter by keyword"
+        placeholder="Filter by title or keyword"
         variant="outlined"
         density="compact"
         hide-details
@@ -372,7 +372,11 @@ const filterTokens = computed<FilterToken[]>(() =>
 function matchesToken(todo: Todo, tok: FilterToken): boolean {
   if (tok.type === 'priority') return todo.priority.toLowerCase() === tok.value
   if (tok.type === 'frequency') return todo.frequency.toLowerCase() === tok.value
-  return (todo.keywords ?? '').toLowerCase().includes(tok.value)
+  // Keyword tokens match against the todo's title as well as its keywords.
+  return (
+    (todo.title ?? '').toLowerCase().includes(tok.value) ||
+    (todo.keywords ?? '').toLowerCase().includes(tok.value)
+  )
 }
 
 const sortedTodos = computed(() => {
@@ -520,6 +524,8 @@ function hitsFor(todo: Todo): string[] {
 
   const keywordTokens = tokens.filter((t) => t.type === 'keyword').map((t) => t.value)
   if (keywordTokens.length) {
+    const title = (todo.title ?? '').toLowerCase()
+    if (keywordTokens.some((tok) => title.includes(tok))) hits.push('title')
     const keywordHits = (todo.keywords ?? '')
       .split(',')
       .map((k) => k.trim())
