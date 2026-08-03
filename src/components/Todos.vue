@@ -1,6 +1,6 @@
 <template>
   <div class="todos-content">
-    <h2 class="mb-2">{{ displayName }} Todos</h2>
+    <h2 class="mb-2">Todos - {{ displayName }}</h2>
 
     <!-- One-time migration of todos saved in this browser before cloud sync. -->
     <v-alert
@@ -209,7 +209,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
 import type { Todo, TodoInput, Frequency, Status, Priority } from '../types'
 import { createTodosApi } from '../services/todosApi'
@@ -248,9 +248,22 @@ function fail(err: unknown, fallback: string) {
   showError.value = true
 }
 
-// --- data loading ---------------------------------------------------------
+// --- data loading + realtime polling --------------------------------------
 
-onMounted(loadTodos)
+const POLL_INTERVAL_MS = 5000
+let pollTimer: ReturnType<typeof setInterval> | undefined
+let polling = false
+
+onMounted(() => {
+  loadTodos()
+  pollTimer = setInterval(pollTodos, POLL_INTERVAL_MS)
+  document.addEventListener('visibilitychange', onVisibilityChange)
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+})
 
 async function loadTodos() {
   loading.value = true
@@ -262,6 +275,36 @@ async function loadTodos() {
   } finally {
     loading.value = false
   }
+}
+
+// A stable signature of the list, so a poll only re-renders when data changed.
+// Every todo is built by the same mapper, so key order is consistent.
+function signature(list: Todo[]): string {
+  return JSON.stringify(list)
+}
+
+// Quietly re-fetch so changes made on another device appear without a refresh.
+async function pollTodos() {
+  // Skip while a mutation is in flight (don't clobber optimistic state),
+  // while a poll is already running, or when the tab is in the background.
+  if (saving.value || polling || document.visibilityState === 'hidden') return
+  polling = true
+  try {
+    const fresh = await api.list()
+    if (saving.value) return // a save started mid-request — let it win
+    if (signature(fresh) !== signature(todos.value)) {
+      todos.value = fresh
+    }
+  } catch {
+    // Transient network errors during polling are non-fatal; keep current list.
+  } finally {
+    polling = false
+  }
+}
+
+function onVisibilityChange() {
+  // Catch up immediately when the user returns to the tab.
+  if (document.visibilityState === 'visible') pollTodos()
 }
 
 // --- legacy (localStorage) migration --------------------------------------

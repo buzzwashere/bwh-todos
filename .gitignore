@@ -51,3 +51,6 @@ coverage
 .eslintcache
 .stylelintcache
 .vite
+
+# other
+src/notes.txt
