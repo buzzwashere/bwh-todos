@@ -31,7 +31,7 @@
         :disabled="loading"
         @click="startCreate"
       >
-        Create New Todo
+        New Todo
       </v-btn>
       <v-spacer />
       <v-text-field
