@@ -7,6 +7,7 @@
 :root {
   --bwh-chrome: #272430;
   --bwh-chrome-text: #f0eef4;
+  --bwh-chrome-rule: rgba(240, 238, 244, 0.16);
 
   --bwh-field: #eeebf2;
   --bwh-surface: #ffffff;

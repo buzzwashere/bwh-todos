@@ -1,6 +1,6 @@
 <template>
   <div class="todos-content">
-    <h2 class="mb-2">Todos - {{ displayName }}</h2>
+    <h2 class="mb-2">{{ displayName }}</h2>
 
     <!-- One-time migration of todos saved in this browser before cloud sync. -->
     <v-alert

@@ -50,6 +50,18 @@
 
       <router-view v-else />
     </v-main>
+
+    <!-- Matches the portfolio site's footer. The copyright doubles as the
+         back-link every bwh-* app carries. -->
+    <v-footer app color="chrome" class="site-footer">
+      <span class="foot-copy">
+        &copy; {{ year }}
+        <a href="https://buzz-was-here.vercel.app/" target="_blank" rel="noopener noreferrer">
+          buzz.was.here
+        </a>
+      </span>
+      <span class="foot-note">Built with Vue, Vuetify, Auth0, and Neon Postgres</span>
+    </v-footer>
   </v-app>
 </template>
 
@@ -57,6 +69,9 @@
 import { useAuth0 } from '@auth0/auth0-vue'
 
 const { isAuthenticated, isLoading, user, error, loginWithRedirect, logout } = useAuth0()
+
+// Four-digit current year for the footer copyright.
+const year = new Date().getFullYear()
 
 function login() {
   loginWithRedirect()
@@ -92,5 +107,47 @@ function logoutClick() {
 
 .user-email {
   opacity: 0.9;
+}
+
+/* Footer styling mirrors buzzwashere's .site-footer. The background comes from
+   the `chrome` theme colour rather than CSS, so Vuetify also derives a readable
+   on-chrome text colour instead of us hard-coding one. */
+.site-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px 20px;
+  flex-wrap: wrap;
+  padding: 10px 24px;
+  font-size: 0.82rem;
+  border-top: 1px solid var(--bwh-chrome-rule);
+}
+
+.foot-copy {
+  font-weight: 700;
+}
+
+.foot-copy a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.foot-copy a:hover,
+.foot-copy a:focus-visible {
+  text-decoration: underline;
+}
+
+.foot-note {
+  margin-inline-start: auto;
+  opacity: 0.9;
+}
+
+@media (max-width: 600px) {
+  .site-footer {
+    justify-content: center;
+  }
+
+  .foot-note {
+    margin-inline-start: 0;
+  }
 }
 </style>
