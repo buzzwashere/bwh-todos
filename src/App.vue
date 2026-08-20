@@ -141,13 +141,15 @@ function logoutClick() {
   opacity: 0.9;
 }
 
+/* On phones the bar is too narrow for both halves, so the build credit drops
+   and the copyright/back-link centres on its own. */
 @media (max-width: 600px) {
   .site-footer {
     justify-content: center;
   }
 
   .foot-note {
-    margin-inline-start: 0;
+    display: none;
   }
 }
 </style>
