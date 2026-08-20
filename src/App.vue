@@ -1,8 +1,8 @@
 <template>
   <v-app>
-    <v-app-bar color="chrome" title="BWH Todos">
+    <v-app-bar color="chrome" title="Todos">
       <template #prepend>
-        <img src="/favicon.svg" alt="BWH Todos logo" class="appbar-logo" />
+        <img src="/favicon.svg" alt="Todos logo" class="appbar-logo" />
       </template>
       <template #append>
         <template v-if="isAuthenticated">
