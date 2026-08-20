@@ -1,3 +1,27 @@
+/* bwh-todos palette — "Graphite & Iris".
+   Chrome is deliberately achromatic (a graphite biased toward the accent), so
+   the only saturated colour on screen is colour that carries meaning: priority
+   and status. Iris sits outside that semantic set — clear of the red/amber of
+   priority and the green/teal of status — so an interactive control is never
+   mistaken for a state. */
+:root {
+  --bwh-chrome: #272430;
+  --bwh-chrome-text: #f0eef4;
+
+  --bwh-field: #eeebf2;
+  --bwh-surface: #ffffff;
+  --bwh-ink: #23212b;
+  --bwh-rule: #d8d4e0;
+
+  --bwh-accent: #544ca8;
+
+  /* Semantic — these encode data, not brand. */
+  --bwh-high: #c0392b;
+  --bwh-medium: #c07214;
+  --bwh-done: #2e7d46;
+  --bwh-progress: #0e7c86;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -7,8 +31,8 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
   line-height: 1.6;
-  color: #333;
-  background: #f5f5f5;
+  color: var(--bwh-ink);
+  background: var(--bwh-field);
 }
 
 #app {

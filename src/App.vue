@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar color="primary" title="BWH Todos">
+    <v-app-bar color="chrome" title="BWH Todos">
       <template #prepend>
         <img src="/favicon.svg" alt="BWH Todos logo" class="appbar-logo" />
       </template>

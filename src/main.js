@@ -17,6 +17,28 @@ const vuetify = createVuetify({
   icons: {
     defaultSet: 'mdi',
   },
+  // Mirrors the tokens in style.css. `chrome` is a custom colour for the app
+  // bar; `primary` is the interactive accent; error/warning/success/info carry
+  // priority and status, so components reference those names rather than raw
+  // Material palette names like 'red'.
+  theme: {
+    defaultTheme: 'light',
+    themes: {
+      light: {
+        dark: false,
+        colors: {
+          chrome: '#272430',
+          primary: '#544ca8',
+          surface: '#ffffff',
+          background: '#eeebf2',
+          error: '#c0392b',
+          warning: '#c07214',
+          success: '#2e7d46',
+          info: '#0e7c86',
+        },
+      },
+    },
+  },
 })
 
 const auth0 = createAuth0({

@@ -148,7 +148,7 @@
           </div>
         </template>
         <template #prepend>
-          <v-icon v-if="todo.completed" color="green">mdi-check</v-icon>
+          <v-icon v-if="todo.completed" color="success">mdi-check</v-icon>
           <v-icon v-else :color="priorityColor(todo.priority)">mdi-flag</v-icon>
         </template>
         <template #append>
@@ -194,7 +194,7 @@
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="cancelDelete">Cancel</v-btn>
-          <v-btn color="red" variant="flat" @click="confirmDelete">Delete</v-btn>
+          <v-btn color="error" variant="flat" @click="confirmDelete">Delete</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -504,11 +504,11 @@ function cancelDelete() {
 // --- display helpers ------------------------------------------------------
 
 function priorityColor(p: Priority) {
-  return p === 'High' ? 'red' : p === 'Medium' ? 'orange' : 'grey'
+  return p === 'High' ? 'error' : p === 'Medium' ? 'warning' : 'grey'
 }
 
 function statusColor(s: Status) {
-  return s === 'Done' ? 'green' : s === 'In Progress' ? 'blue' : 'grey'
+  return s === 'Done' ? 'success' : s === 'In Progress' ? 'info' : 'grey'
 }
 
 function hitsFor(todo: Todo): string[] {
@@ -550,7 +550,7 @@ function hitsFor(todo: Todo): string[] {
 
 .hits-line {
   font-style: italic;
-  color: #1976d2;
+  color: var(--bwh-accent);
 }
 
 .todo-list :deep(.v-list-item-subtitle) {
