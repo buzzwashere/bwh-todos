@@ -29,9 +29,9 @@
         <v-progress-circular indeterminate color="primary" size="48" />
       </div>
 
-      <div v-else-if="error" class="gate">
+      <div v-else-if="fatalError" class="gate">
         <v-alert type="error" variant="tonal" max-width="480">
-          {{ error.message }}
+          {{ fatalError.message }}
         </v-alert>
       </div>
 
@@ -66,9 +66,26 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
 
 const { isAuthenticated, isLoading, user, error, loginWithRedirect, logout } = useAuth0()
+
+// Auth0 errors that mean "nobody is signed in", not "something broke". The plugin
+// runs checkSession() on startup and reports a failure through `error` rather than
+// throwing, so a cache holding no usable refresh token — expired, evicted, or from a
+// session that never got `offline_access` — surfaced as a red alert where the sign-in
+// card belongs. Signing in is the fix for all of these, so they fall through to the
+// card that offers it; anything else is still a real error and still shown.
+const SIGNED_OUT_ERRORS = ['missing_refresh_token', 'invalid_grant', 'login_required', 'consent_required']
+
+const fatalError = computed(() => {
+  const err = error.value
+  if (!err) {
+    return null
+  }
+  return SIGNED_OUT_ERRORS.includes(err.error) ? null : err
+})
 
 // Four-digit current year for the footer copyright.
 const year = new Date().getFullYear()
