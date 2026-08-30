@@ -559,13 +559,26 @@ function hitsFor(todo: Todo): string[] {
     padding: 1rem;
   }
 
+  /* Keep the button and the filter on one row; the filter gives up the width. */
   .todos-toolbar {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
+  /* The spacer would take half the leftover width, which the filter needs here. */
+  .todos-toolbar .v-spacer {
+    display: none;
+  }
+
+  .todos-toolbar .v-btn {
+    flex: 0 0 auto;
+  }
+
+  /* min-width: 0 is what lets a flex item shrink past its content width — without
+     it the field keeps its intrinsic size and pushes itself onto the next row. */
   .todos-filter {
+    flex: 1 1 auto;
+    min-width: 0;
     max-width: 100%;
-    flex: 1 1 100%;
   }
 
   .todo-list :deep(.v-list-item) {
