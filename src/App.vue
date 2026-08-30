@@ -67,6 +67,14 @@
       <span v-if="userEmail" class="foot-email" :title="userEmail">
         {{ userEmail }}
       </span>
+      <v-btn
+        class="foot-about"
+        variant="text"
+        size="small"
+        @click="showAbout = true"
+      >
+        About
+      </v-btn>
     </v-footer>
 
     <about-dialog v-model="showAbout" />
@@ -150,7 +158,6 @@ function logoutClick() {
 .site-footer {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px 20px;
   flex-wrap: wrap;
   padding: 10px 24px;
@@ -165,5 +172,10 @@ function logoutClick() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Pushed to the trailing edge, and still there when signed out drops the email. */
+.foot-about {
+  margin-inline-start: auto;
 }
 </style>
