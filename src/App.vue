@@ -119,13 +119,17 @@
 </template>
 
 <script setup>
-import { computed, provide, ref, watch } from 'vue'
+import { computed, nextTick, provide, ref, watch } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
 import AboutDialog from './components/AboutDialog.vue'
 import ChangePasswordDialog from './components/ChangePasswordDialog.vue'
-import { SORT_OPTIONS, loadSettings, saveSettings, todoSettingsKey } from './todoSettings'
+import { DEFAULT_SETTINGS, SORT_OPTIONS, normalizeSettings, todoSettingsKey } from './todoSettings'
+import { createSettingsApi } from './services/settingsApi'
 
-const { isAuthenticated, isLoading, user, error, loginWithRedirect, logout } = useAuth0()
+const { isAuthenticated, isLoading, user, error, getAccessTokenSilently, loginWithRedirect, logout } =
+  useAuth0()
+
+const settingsApi = createSettingsApi(() => getAccessTokenSilently())
 
 // Auth0 errors that mean "nobody is signed in", not "something broke". The plugin
 // runs checkSession() on startup and reports a failure through `error` rather than
@@ -152,14 +156,45 @@ const showSettings = ref(false)
 const showChangePassword = ref(false)
 const sortOptions = SORT_OPTIONS
 
-// Seeded from localStorage so a refresh keeps the last choice, and written back on
-// every change.
-const stored = loadSettings()
-const sortBy = ref(stored.sortBy)
-const showCompleted = ref(stored.showCompleted)
+// The stored preferences live with the account, so they are fetched once the user is
+// signed in and written back on every change. Defaults hold until the fetch lands.
+const sortBy = ref(DEFAULT_SETTINGS.sortBy)
+const showCompleted = ref(DEFAULT_SETTINGS.showCompleted)
+
+// Applying the fetched values assigns the same refs the watcher below is watching, so
+// this guard stops the load from immediately echoing back as a save.
+let applyingStored = false
+
+watch(
+  isAuthenticated,
+  async signedIn => {
+    if (!signedIn) {
+      return
+    }
+    try {
+      const stored = normalizeSettings(await settingsApi.get())
+      applyingStored = true
+      sortBy.value = stored.sortBy
+      showCompleted.value = stored.showCompleted
+      await nextTick()
+    } catch (err) {
+      // A failed read is not worth interrupting the app for — the menu simply opens
+      // on the defaults, and the next change still saves.
+      console.error('[settings] load failed', err)
+    } finally {
+      applyingStored = false
+    }
+  },
+  { immediate: true }
+)
 
 watch([sortBy, showCompleted], () => {
-  saveSettings({ sortBy: sortBy.value, showCompleted: showCompleted.value })
+  if (applyingStored || !isAuthenticated.value) {
+    return
+  }
+  settingsApi
+    .save({ sortBy: sortBy.value, showCompleted: showCompleted.value })
+    .catch(err => console.error('[settings] save failed', err))
 })
 
 provide(todoSettingsKey, { sortBy, showCompleted })

@@ -20,3 +20,12 @@ create table if not exists todos (
 
 -- Every query is scoped by user_id, so index it.
 create index if not exists todos_user_id_idx on todos (user_id);
+
+-- Per-user display preferences for the list. One row per user, so the settings
+-- follow the account across devices the way the todos themselves do.
+create table if not exists user_settings (
+  user_id        text        primary key,      -- Auth0 subject (sub claim)
+  sort_by        text        not null default 'Priority',
+  show_completed boolean     not null default true,
+  updated_at     timestamptz not null default now()
+);
