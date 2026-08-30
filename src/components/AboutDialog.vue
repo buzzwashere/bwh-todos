@@ -4,7 +4,12 @@
     max-width="420"
   >
     <v-card class="pa-5">
-      <div class="text-subtitle-1 font-weight-bold mb-4">About Todos</div>
+      <div class="text-subtitle-1 font-weight-bold mb-3">About Todos</div>
+
+      <p class="about-description mb-4">
+        A todo list that follows you across every device. Sign in and your todos are
+        stored in the cloud, kept private to your account, and synced as you go.
+      </p>
 
       <p class="about-copy mb-2">
         &copy; {{ year }}
@@ -50,6 +55,11 @@ const year = new Date().getFullYear()
 .about-copy a:hover,
 .about-copy a:focus-visible {
   text-decoration: none;
+}
+
+.about-description {
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
 .about-note {

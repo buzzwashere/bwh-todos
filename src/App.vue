@@ -64,8 +64,8 @@
     <!-- The copyright and build credit this bar used to carry now live in the
          About dialog, opened from the app-bar logo. -->
     <v-footer app color="chrome" class="site-footer">
-      <span v-if="userId" class="foot-userid" :title="userId">
-        User ID: {{ userId }}
+      <span v-if="userEmail" class="foot-email" :title="userEmail">
+        {{ userEmail }}
       </span>
     </v-footer>
 
@@ -98,9 +98,8 @@ const fatalError = computed(() => {
 
 const showAbout = ref(false)
 
-// The Auth0 subject claim — the stable identifier for the signed-in account, and
-// what the API sees as the todo owner. Blank while signed out, which hides the line.
-const userId = computed(() => user.value?.sub ?? '')
+// Blank while signed out, which hides the line.
+const userEmail = computed(() => user.value?.email ?? '')
 
 function login() {
   loginWithRedirect()
@@ -151,6 +150,7 @@ function logoutClick() {
 .site-footer {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px 20px;
   flex-wrap: wrap;
   padding: 10px 24px;
@@ -158,18 +158,12 @@ function logoutClick() {
   border-top: 1px solid var(--bwh-chrome-rule);
 }
 
-/* One long opaque string, so it truncates rather than wrapping the bar to two
-   rows; the full value stays available through the title attribute. */
-.foot-userid {
+/* Truncates rather than wrapping the bar to two rows on a narrow screen; the
+   full address stays available through the title attribute. */
+.foot-email {
   opacity: 0.9;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-@media (max-width: 600px) {
-  .site-footer {
-    justify-content: center;
-  }
 }
 </style>
