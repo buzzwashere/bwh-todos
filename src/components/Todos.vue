@@ -166,9 +166,13 @@
             >
               {{ todo.frequency }}
             </v-chip>
-            <span v-if="todo.dueDate" class="text-caption text-medium-emphasis">
-              {{ todo.dueDate }}
-            </span>
+            <v-chip
+              v-if="todo.dueDate"
+              size="x-small"
+              variant="tonal"
+            >
+              Due: {{ todo.dueDate }}
+            </v-chip>
             <v-btn icon="mdi-pencil" variant="text" size="small" @click="startEdit(todo)" />
             <v-btn icon="mdi-delete" variant="text" size="small" @click="askDelete(todo)" />
           </div>
