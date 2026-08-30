@@ -37,7 +37,7 @@
 
               <v-divider class="my-1" />
 
-              <v-list-item>
+              <v-list-item class="settings-field">
                 <v-select
                   v-model="sortBy"
                   :items="sortOptions"
@@ -48,7 +48,7 @@
                 />
               </v-list-item>
 
-              <v-list-item>
+              <v-list-item class="settings-field">
                 <v-checkbox
                   v-model="showCompleted"
                   label="Show Completed"
@@ -119,11 +119,11 @@
 </template>
 
 <script setup>
-import { computed, provide, ref } from 'vue'
+import { computed, provide, ref, watch } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
 import AboutDialog from './components/AboutDialog.vue'
 import ChangePasswordDialog from './components/ChangePasswordDialog.vue'
-import { SORT_OPTIONS, todoSettingsKey } from './todoSettings'
+import { SORT_OPTIONS, loadSettings, saveSettings, todoSettingsKey } from './todoSettings'
 
 const { isAuthenticated, isLoading, user, error, loginWithRedirect, logout } = useAuth0()
 
@@ -151,8 +151,16 @@ const showAbout = ref(false)
 const showSettings = ref(false)
 const showChangePassword = ref(false)
 const sortOptions = SORT_OPTIONS
-const sortBy = ref(SORT_OPTIONS[0])
-const showCompleted = ref(true)
+
+// Seeded from localStorage so a refresh keeps the last choice, and written back on
+// every change.
+const stored = loadSettings()
+const sortBy = ref(stored.sortBy)
+const showCompleted = ref(stored.showCompleted)
+
+watch([sortBy, showCompleted], () => {
+  saveSettings({ sortBy: sortBy.value, showCompleted: showCompleted.value })
+})
 
 provide(todoSettingsKey, { sortBy, showCompleted })
 
@@ -211,6 +219,19 @@ function logoutClick() {
   padding: 10px 24px;
   font-size: 0.82rem;
   border-top: 1px solid var(--bwh-chrome-rule);
+}
+
+/* An outlined field floats its label above the input's own box, and Vuetify clips
+   `.v-list-item__content` with `overflow: hidden` — which cut the top off "Sort by".
+   Unclipping alone is not enough: the label then lands under the item above it, so
+   the row also needs the vertical room to hold it. */
+.settings-field {
+  padding-top: 12px;
+  padding-bottom: 4px;
+}
+
+.settings-field :deep(.v-list-item__content) {
+  overflow: visible;
 }
 
 /* Truncates rather than wrapping the bar to two rows on a narrow screen; the
