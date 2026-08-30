@@ -1,7 +1,5 @@
 <template>
   <div class="todos-content">
-    <h2 class="mb-2">{{ displayName }}</h2>
-
     <!-- One-time migration of todos saved in this browser before cloud sync. -->
     <v-alert
       v-if="legacyTodos.length"
@@ -219,16 +217,8 @@ const priorities: Priority[] = ['Low', 'Medium', 'High']
 const frequencies: Frequency[] = ['daily', 'monthly', 'annually', 'one-time', 'ongoing', 'other']
 const statuses: Status[] = ['Not started', 'In Progress', 'Done']
 
-const { getAccessTokenSilently, user } = useAuth0()
+const { getAccessTokenSilently } = useAuth0()
 const api = createTodosApi(() => getAccessTokenSilently())
-
-// Prefer a friendly name, falling back through the available Auth0 claims.
-const displayName = computed(() => {
-  const u = user.value
-  return (
-    u?.given_name || u?.nickname || u?.name || u?.email?.split('@')[0] || 'My'
-  )
-})
 
 const todos = ref<Todo[]>([])
 const loading = ref(true)
