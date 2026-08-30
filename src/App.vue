@@ -2,17 +2,7 @@
   <v-app>
     <v-app-bar color="chrome" title="Todos">
       <template #prepend>
-        <img
-          src="/favicon.svg"
-          alt="About Todos"
-          title="About Todos"
-          class="appbar-logo"
-          role="button"
-          tabindex="0"
-          @click="showAbout = true"
-          @keydown.enter.prevent="showAbout = true"
-          @keydown.space.prevent="showAbout = true"
-        />
+        <img src="/favicon.svg" alt="Todos logo" class="appbar-logo" />
       </template>
       <template #append>
         <template v-if="isAuthenticated">
@@ -22,6 +12,52 @@
           <v-btn variant="text" prepend-icon="mdi-logout" @click="logoutClick">
             Log out
           </v-btn>
+          <!-- close-on-content-click is off so the select and the checkbox can be
+               used without the menu closing under them; the one item that leaves
+               the menu closes it itself. -->
+          <v-menu
+            v-model="showSettings"
+            location="bottom end"
+            :close-on-content-click="false"
+          >
+            <template #activator="{ props: menuProps }">
+              <v-btn
+                v-bind="menuProps"
+                icon="mdi-cog"
+                variant="text"
+                aria-label="Settings"
+              />
+            </template>
+            <v-list density="compact" min-width="240">
+              <v-list-item
+                title="Change Password"
+                prepend-icon="mdi-lock-reset"
+                @click="openChangePassword"
+              />
+
+              <v-divider class="my-1" />
+
+              <v-list-item>
+                <v-select
+                  v-model="sortBy"
+                  :items="sortOptions"
+                  label="Sort by"
+                  density="compact"
+                  variant="outlined"
+                  hide-details
+                />
+              </v-list-item>
+
+              <v-list-item>
+                <v-checkbox
+                  v-model="showCompleted"
+                  label="Show Completed"
+                  density="compact"
+                  hide-details
+                />
+              </v-list-item>
+            </v-list>
+          </v-menu>
         </template>
         <v-btn
           v-else-if="!isLoading"
@@ -78,13 +114,16 @@
     </v-footer>
 
     <about-dialog v-model="showAbout" />
+    <change-password-dialog v-model="showChangePassword" :email="userEmail" />
   </v-app>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, provide, ref } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
 import AboutDialog from './components/AboutDialog.vue'
+import ChangePasswordDialog from './components/ChangePasswordDialog.vue'
+import { SORT_OPTIONS, todoSettingsKey } from './todoSettings'
 
 const { isAuthenticated, isLoading, user, error, loginWithRedirect, logout } = useAuth0()
 
@@ -106,6 +145,22 @@ const fatalError = computed(() => {
 
 const showAbout = ref(false)
 
+// Settings menu state. `sortBy` and `showCompleted` are provided to the list rather
+// than passed as props — the menu lives in the app bar, which is not on the route,
+// so there is no prop path between the two.
+const showSettings = ref(false)
+const showChangePassword = ref(false)
+const sortOptions = SORT_OPTIONS
+const sortBy = ref(SORT_OPTIONS[0])
+const showCompleted = ref(true)
+
+provide(todoSettingsKey, { sortBy, showCompleted })
+
+function openChangePassword() {
+  showSettings.value = false
+  showChangePassword.value = true
+}
+
 // Blank while signed out, which hides the line.
 const userEmail = computed(() => user.value?.email ?? '')
 
@@ -124,13 +179,6 @@ function logoutClick() {
   height: 30px;
   display: block;
   margin-inline-start: 13px;
-  cursor: pointer;
-}
-
-.appbar-logo:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-  border-radius: 4px;
 }
 
 /* Tighten the default 20px gap between the logo and the title by ~4px.

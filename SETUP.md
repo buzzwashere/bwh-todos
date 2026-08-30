@@ -58,6 +58,26 @@ AUTH0_AUDIENCE=         # same as VITE_AUTH0_AUDIENCE
 Under **Authentication → Passwordless**, enable **Email**. Auth0's default database
 login (email + password) works out of the box if you skip this.
 
+### 2d. (Optional) Change Password
+
+**Settings → Change Password** in the app does not collect a new password. Auth0 owns
+the credential, so the dialog asks the tenant to email a reset link instead, by posting
+to `https://<your-tenant>/dbconnections/change_password`.
+
+That endpoint needs the name of the **database connection** the account lives in. Auth0
+creates every new tenant with one named `Username-Password-Authentication`, and the app
+assumes that name when `VITE_AUTH0_DB_CONNECTION` is unset. If your tenant's connection
+is named differently — check **Authentication → Database** — set the variable to match:
+
+```bash
+VITE_AUTH0_DB_CONNECTION=Your-Connection-Name
+```
+
+A wrong or missing connection name shows up as an error inside the dialog when the
+button is pressed; nothing is sent until then. Accounts that sign in through a social
+or passwordless connection have no password to reset, so the link is not applicable to
+them.
+
 ## 3. Run it locally
 
 ```bash

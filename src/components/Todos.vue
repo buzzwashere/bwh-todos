@@ -207,10 +207,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, inject, onMounted, onUnmounted } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
 import type { Todo, TodoInput, Frequency, Status, Priority } from '../types'
 import { createTodosApi } from '../services/todosApi'
+import { todoSettingsKey, type SortBy } from '../todoSettings'
 
 const LEGACY_KEY = 'bwh-todos.todos'
 const priorities: Priority[] = ['Low', 'Medium', 'High']
@@ -232,6 +233,13 @@ const editingId = ref<string | null>(null)
 const filterText = ref('')
 
 const priorityRank: Record<Priority, number> = { High: 0, Medium: 1, Low: 2 }
+
+// Provided by App.vue's settings menu. The defaults keep this component usable on its
+// own — mounted outside that provider it simply behaves as it did before the menu.
+const { sortBy, showCompleted } = inject(todoSettingsKey, {
+  sortBy: ref<SortBy>('Date'),
+  showCompleted: ref(true),
+})
 
 function fail(err: unknown, fallback: string) {
   errorMsg.value = err instanceof Error ? err.message : fallback
@@ -369,18 +377,26 @@ function matchesToken(todo: Todo, tok: FilterToken): boolean {
   )
 }
 
+// A todo with no due date sorts last: '￿' is above every digit, so an empty date
+// compares greater than any real one.
+const byDueDate = (a: Todo, b: Todo) => (a.dueDate || '￿').localeCompare(b.dueDate || '￿')
+const byPriority = (a: Todo, b: Todo) => priorityRank[a.priority] - priorityRank[b.priority]
+
 const sortedTodos = computed(() => {
   const tokens = filterTokens.value
-  const filtered = tokens.length
+  let filtered = tokens.length
     ? todos.value.filter((t) => tokens.some((tok) => matchesToken(t, tok)))
     : todos.value
+  if (!showCompleted.value) {
+    filtered = filtered.filter((t) => !t.completed)
+  }
+  // Completed todos always sink to the bottom; the setting only chooses which of due
+  // date and priority leads above that, with the other breaking ties.
+  const byChosen = sortBy.value === 'Priority' ? byPriority : byDueDate
+  const byOther = sortBy.value === 'Priority' ? byDueDate : byPriority
   return [...filtered].sort((a, b) => {
     if (a.completed !== b.completed) return a.completed ? 1 : -1
-    const aDue = a.dueDate || '￿'
-    const bDue = b.dueDate || '￿'
-    const dueCmp = aDue.localeCompare(bDue)
-    if (dueCmp !== 0) return dueCmp
-    return priorityRank[a.priority] - priorityRank[b.priority]
+    return byChosen(a, b) || byOther(a, b)
   })
 })
 
