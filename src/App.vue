@@ -2,7 +2,17 @@
   <v-app>
     <v-app-bar color="chrome" title="Todos">
       <template #prepend>
-        <img src="/favicon.svg" alt="Todos logo" class="appbar-logo" />
+        <img
+          src="/favicon.svg"
+          alt="About Todos"
+          title="About Todos"
+          class="appbar-logo"
+          role="button"
+          tabindex="0"
+          @click="showAbout = true"
+          @keydown.enter.prevent="showAbout = true"
+          @keydown.space.prevent="showAbout = true"
+        />
       </template>
       <template #append>
         <template v-if="isAuthenticated">
@@ -51,23 +61,22 @@
       <router-view v-else />
     </v-main>
 
-    <!-- Matches the portfolio site's footer. The copyright doubles as the
-         back-link every bwh-* app carries. -->
+    <!-- The copyright and build credit this bar used to carry now live in the
+         About dialog, opened from the app-bar logo. -->
     <v-footer app color="chrome" class="site-footer">
-      <span class="foot-copy">
-        &copy; {{ year }}
-        <a href="https://buzz-was-here.vercel.app/" target="_blank" rel="noopener noreferrer">
-          buzz.was.here
-        </a>
+      <span v-if="userId" class="foot-userid" :title="userId">
+        User ID: {{ userId }}
       </span>
-      <span class="foot-note">Built with Vue, Vuetify, Auth0, and Neon Postgres</span>
     </v-footer>
+
+    <about-dialog v-model="showAbout" />
   </v-app>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
+import AboutDialog from './components/AboutDialog.vue'
 
 const { isAuthenticated, isLoading, user, error, loginWithRedirect, logout } = useAuth0()
 
@@ -87,8 +96,11 @@ const fatalError = computed(() => {
   return SIGNED_OUT_ERRORS.includes(err.error) ? null : err
 })
 
-// Four-digit current year for the footer copyright.
-const year = new Date().getFullYear()
+const showAbout = ref(false)
+
+// The Auth0 subject claim — the stable identifier for the signed-in account, and
+// what the API sees as the todo owner. Blank while signed out, which hides the line.
+const userId = computed(() => user.value?.sub ?? '')
 
 function login() {
   loginWithRedirect()
@@ -105,6 +117,13 @@ function logoutClick() {
   height: 30px;
   display: block;
   margin-inline-start: 13px;
+  cursor: pointer;
+}
+
+.appbar-logo:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
 /* Tighten the default 20px gap between the logo and the title by ~4px.
@@ -139,34 +158,18 @@ function logoutClick() {
   border-top: 1px solid var(--bwh-chrome-rule);
 }
 
-.foot-copy {
-  font-weight: 700;
-}
-
-.foot-copy a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.foot-copy a:hover,
-.foot-copy a:focus-visible {
-  text-decoration: underline;
-}
-
-.foot-note {
-  margin-inline-start: auto;
+/* One long opaque string, so it truncates rather than wrapping the bar to two
+   rows; the full value stays available through the title attribute. */
+.foot-userid {
   opacity: 0.9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* On phones the bar is too narrow for both halves, so the build credit drops
-   and the copyright/back-link centres on its own. */
 @media (max-width: 600px) {
   .site-footer {
     justify-content: center;
-  }
-
-  .foot-note {
-    display: none;
   }
 }
 </style>
