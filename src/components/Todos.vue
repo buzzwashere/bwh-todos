@@ -160,7 +160,7 @@
               {{ todo.status }}
             </v-chip>
             <v-chip
-              v-if="['daily', 'monthly', 'annually'].includes(todo.frequency)"
+              v-if="showFrequencyChip(todo)"
               size="x-small"
               variant="tonal"
             >
@@ -382,6 +382,22 @@ function matchesToken(todo: Todo, tok: FilterToken): boolean {
 const byDueDate = (a: Todo, b: Todo) => (a.dueDate || '￿').localeCompare(b.dueDate || '￿')
 const byPriority = (a: Todo, b: Todo) => priorityRank[a.priority] - priorityRank[b.priority]
 
+// Frequency has no natural ordering, so it follows the order the options are declared
+// in — shortest cadence first, then the non-recurring ones — rather than alphabetical,
+// which would read as annually, daily, monthly.
+const frequencyRank: Record<string, number> = Object.fromEntries(frequencies.map((f, i) => [f, i]))
+const byFrequency = (a: Todo, b: Todo) =>
+  (frequencyRank[a.frequency] ?? frequencies.length) - (frequencyRank[b.frequency] ?? frequencies.length)
+
+const comparators: Record<SortBy, (a: Todo, b: Todo) => number> = {
+  Priority: byPriority,
+  Date: byDueDate,
+  Frequency: byFrequency,
+}
+
+// Applied after the chosen key, so rows that tie on it still land in a stable order.
+const TIEBREAK_ORDER: SortBy[] = ['Date', 'Priority', 'Frequency']
+
 const sortedTodos = computed(() => {
   const tokens = filterTokens.value
   let filtered = tokens.length
@@ -390,15 +406,29 @@ const sortedTodos = computed(() => {
   if (!showCompleted.value) {
     filtered = filtered.filter((t) => !t.completed)
   }
-  // Completed todos always sink to the bottom; the setting only chooses which of due
-  // date and priority leads above that, with the other breaking ties.
-  const byChosen = sortBy.value === 'Priority' ? byPriority : byDueDate
-  const byOther = sortBy.value === 'Priority' ? byDueDate : byPriority
+  // Completed todos always sink to the bottom; the setting only chooses which key
+  // leads above that, with the rest breaking ties.
+  const keys = [sortBy.value, ...TIEBREAK_ORDER.filter((k) => k !== sortBy.value)]
   return [...filtered].sort((a, b) => {
     if (a.completed !== b.completed) return a.completed ? 1 : -1
-    return byChosen(a, b) || byOther(a, b)
+    for (const key of keys) {
+      const cmp = comparators[key](a, b)
+      if (cmp !== 0) return cmp
+    }
+    return 0
   })
 })
+
+// The recurring cadences are always worth a chip; sorting by frequency puts one on
+// every row, so the order the list is in is visible on the rows themselves.
+const RECURRING_FREQUENCIES: Frequency[] = ['daily', 'monthly', 'annually']
+
+function showFrequencyChip(todo: Todo): boolean {
+  if (!todo.frequency) {
+    return false
+  }
+  return sortBy.value === 'Frequency' || RECURRING_FREQUENCIES.includes(todo.frequency)
+}
 
 // --- form state -----------------------------------------------------------
 

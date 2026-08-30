@@ -4,9 +4,9 @@ import type { InjectionKey, Ref } from 'vue'
 // The refs are passed through as-is rather than copied, so the list re-sorts the
 // moment the menu changes.
 
-export type SortBy = 'Priority' | 'Date'
+export type SortBy = 'Priority' | 'Date' | 'Frequency'
 
-export const SORT_OPTIONS: SortBy[] = ['Priority', 'Date']
+export const SORT_OPTIONS: SortBy[] = ['Priority', 'Date', 'Frequency']
 
 export interface TodoSettings {
   sortBy: Ref<SortBy>
