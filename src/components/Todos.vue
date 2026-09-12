@@ -137,7 +137,13 @@
       <v-progress-circular indeterminate color="primary" />
     </div>
 
-    <v-list v-else class="todo-list" lines="two">
+    <!-- Hidden while the form is open so it has the page to itself; the list returns
+         when the todo is saved or the form is cancelled. -->
+    <v-list
+      v-else-if="!showForm"
+      class="todo-list"
+      lines="two"
+    >
       <v-list-item v-for="todo in sortedTodos" :key="todo.id" :title="todo.title">
         <template #subtitle>
           <div>{{ todo.description }}</div>
@@ -151,8 +157,10 @@
         </template>
         <template #append>
           <div class="todo-item-meta d-flex align-center ga-2">
+            <!-- Once a todo shows its completion date, the status chip would only repeat
+                 what the check icon and that date already say. -->
             <v-chip
-              v-if="todo.status"
+              v-if="todo.status && !showCompletedDate(todo)"
               size="x-small"
               variant="tonal"
               :color="statusColor(todo.status)"
@@ -166,8 +174,17 @@
             >
               {{ todo.frequency }}
             </v-chip>
+            <!-- A finished todo shows when it was done in place of when it was due. -->
             <v-chip
-              v-if="todo.dueDate"
+              v-if="showCompletedDate(todo)"
+              size="x-small"
+              variant="tonal"
+              color="success"
+            >
+              Completed: {{ todo.completedAt }}
+            </v-chip>
+            <v-chip
+              v-else-if="todo.dueDate"
               size="x-small"
               variant="tonal"
             >
@@ -426,6 +443,10 @@ const sortedTodos = computed(() => {
 // The recurring cadences are always worth a chip; sorting by frequency puts one on
 // every row, so the order the list is in is visible on the rows themselves.
 const RECURRING_FREQUENCIES: Frequency[] = ['daily', 'monthly', 'annually']
+
+function showCompletedDate(todo: Todo): boolean {
+  return todo.completed && Boolean(todo.completedAt)
+}
 
 function showFrequencyChip(todo: Todo): boolean {
   if (!todo.frequency) {
