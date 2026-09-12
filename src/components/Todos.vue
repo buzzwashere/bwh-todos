@@ -178,10 +178,10 @@
         </template>
         <template #append>
           <div class="todo-item-meta d-flex align-center ga-2">
-            <!-- Once a todo shows its completion date, the status chip would only repeat
-                 what the check icon and that date already say. -->
+            <!-- A completed todo's status is always Done, which the check icon and the
+                 row's tint already say, so the chip would only repeat them. -->
             <v-chip
-              v-if="todo.status && !showCompletedDate(todo)"
+              v-if="todo.status && !todo.completed"
               size="x-small"
               variant="tonal"
               :color="statusColor(todo.status)"
@@ -755,9 +755,20 @@ function hitsFor(todo: Todo): string[] {
     white-space: normal;
   }
 
+  /* The list is the nearest scroll container, so any row that outgrows it becomes
+     a sideways swipe on a phone. Never allow that; the rules below keep rows in
+     bounds, and this catches anything they miss. */
+  .todo-list {
+    overflow-x: hidden;
+  }
+
+  /* These two blocks each take a full row of their own, indented to line up under
+     the title. The indent has to come out of the basis: 100% plus a 56px margin
+     is 56px wider than the row, which is what lets the list scroll sideways. */
   .todo-list :deep(.v-list-item__append) {
     order: 3;
-    flex: 0 0 100%;
+    flex: 0 0 calc(100% - 56px);
+    min-width: 0;
     margin-inline-start: 56px;
     margin-inline-end: 0;
     padding-top: 0;
@@ -766,10 +777,13 @@ function hitsFor(todo: Todo): string[] {
 
   .todo-list :deep(.v-list-item-subtitle) {
     order: 4;
-    flex: 0 0 100%;
+    flex: 0 0 calc(100% - 56px);
+    min-width: 0;
     margin-inline-start: 56px;
     padding-top: 0;
     margin-top: -4px;
+    /* A long URL or token in a description would otherwise refuse to wrap. */
+    overflow-wrap: anywhere;
   }
 
   .todo-item-meta {
