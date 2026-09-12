@@ -772,7 +772,8 @@ function hitsFor(todo: Todo): string[] {
     margin-inline-start: 56px;
     margin-inline-end: 0;
     padding-top: 0;
-    margin-top: -4px;
+    /* Breathing room between the title and the chip row. */
+    margin-top: 6px;
   }
 
   .todo-list :deep(.v-list-item-subtitle) {
@@ -781,7 +782,8 @@ function hitsFor(todo: Todo): string[] {
     min-width: 0;
     margin-inline-start: 56px;
     padding-top: 0;
-    margin-top: -4px;
+    /* ...and between the chips and the description. */
+    margin-top: 6px;
     /* A long URL or token in a description would otherwise refuse to wrap. */
     overflow-wrap: anywhere;
   }
@@ -789,7 +791,7 @@ function hitsFor(todo: Todo): string[] {
   .todo-item-meta {
     flex-wrap: wrap;
     justify-content: flex-start;
-    row-gap: 4px;
+    row-gap: 6px;
   }
 }
 </style>
