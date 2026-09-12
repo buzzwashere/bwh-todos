@@ -161,6 +161,7 @@
         :key="todo.id"
         :title="todo.title"
         class="todo-row"
+        :class="{ 'todo-row--completed': todo.completed }"
         @click="startEdit(todo)"
       >
         <template #subtitle>
@@ -659,6 +660,12 @@ function hitsFor(todo: Todo): string[] {
 
 .todos-filter {
   max-width: 260px;
+}
+
+/* Finished rows sit on the page's field colour so they visibly recede from the
+   open ones without adding a colour that could read as a status. */
+.todo-row--completed {
+  background-color: var(--bwh-field);
 }
 
 /* Wider than a phone: the trash can only shows while the row is hovered (or the
