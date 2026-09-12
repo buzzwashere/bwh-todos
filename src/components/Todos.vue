@@ -662,10 +662,18 @@ function hitsFor(todo: Todo): string[] {
   max-width: 260px;
 }
 
-/* Finished rows sit on the page's field colour so they visibly recede from the
-   open ones without adding a colour that could read as a status. */
+/* Completed rows sort last, so the list's default bottom padding would show as a
+   white strip under the final tinted row. */
+.todo-list {
+  padding-bottom: 0;
+}
+
+/* Finished rows sit on the page's field colour, with the text taken down to
+   medium emphasis, so they visibly recede from the open ones without adding a
+   colour that could read as a status. */
 .todo-row--completed {
   background-color: var(--bwh-field);
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
 }
 
 /* Wider than a phone: the trash can only shows while the row is hovered (or the
