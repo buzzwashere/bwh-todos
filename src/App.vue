@@ -85,7 +85,10 @@
         <v-card max-width="420" class="pa-6 text-center" variant="outlined">
           <v-icon size="48" color="primary" class="mb-3">mdi-cloud-check-outline</v-icon>
           <h2 class="text-h6 mb-2">Sign in to sync your todos</h2>
-          <p class="text-body-2 text-medium-emphasis mb-4">
+          <p v-if="sessionExpired" class="text-body-2 text-medium-emphasis mb-4">
+            Your session has expired. Please sign in again.
+          </p>
+          <p v-else class="text-body-2 text-medium-emphasis mb-4">
             Your todos are stored securely in the cloud and available on every device.
           </p>
           <v-btn color="primary" size="large" prepend-icon="mdi-login" @click="login">
@@ -145,6 +148,22 @@ const fatalError = computed(() => {
     return null
   }
   return SIGNED_OUT_ERRORS.includes(err.error) ? null : err
+})
+
+// The same codes can arrive mid-session: the refresh token dies overnight, the next
+// silent token request (usually the poll that fires when the tab is revisited) throws,
+// and the plugin records it here — but the SDK keeps the cached user, so the app would
+// carry on showing the list with every request failing. Clearing the local session
+// flips `isAuthenticated` and returns the app to the sign-in card. `openUrl: false`
+// keeps it local; a round trip to Auth0's logout endpoint isn't needed to re-sign-in.
+const sessionExpired = ref(false)
+
+watch(error, err => {
+  if (!err || !isAuthenticated.value || !SIGNED_OUT_ERRORS.includes(err.error)) {
+    return
+  }
+  sessionExpired.value = true
+  logout({ openUrl: false })
 })
 
 const showAbout = ref(false)
@@ -208,6 +227,7 @@ function openChangePassword() {
 const userEmail = computed(() => user.value?.email ?? '')
 
 function login() {
+  sessionExpired.value = false
   loginWithRedirect()
 }
 
