@@ -114,6 +114,7 @@
             density="compact"
             hide-details
             class="mb-2"
+            @update:model-value="onCompletedChange"
           />
           <v-text-field
             v-model="form.completedAt"
@@ -153,6 +154,7 @@
       v-else-if="!showForm"
       class="todo-list"
       lines="two"
+      rounded
     >
       <!-- The whole row opens the editor. On phones the delete icon is hidden (the
            form's Delete button covers it); on wider screens it appears on hover. -->
@@ -497,20 +499,29 @@ const emptyForm = (): TodoInput => ({
 
 const form = reactive<TodoInput>(emptyForm())
 
-/** Normalize an unknown object (legacy row / form) into a safe TodoInput. */
+/** Normalize an unknown object (legacy row / form) into a safe TodoInput.
+ *  A completed todo is always saved with status Done, whatever the source said. */
 function toInput(src: Partial<Todo>): TodoInput {
   const base = emptyForm()
+  const completed = Boolean(src.completed)
   return {
     ...base,
     ...src,
     title: (src.title ?? '').toString(),
-    completed: Boolean(src.completed),
-    completedAt: src.completed ? (src.completedAt ?? '') : '',
+    completed,
+    completedAt: completed ? (src.completedAt ?? '') : '',
+    status: completed ? 'Done' : (src.status ?? base.status),
   }
 }
 
 function formToInput(): TodoInput {
   return toInput({ ...form })
+}
+
+// Ticking Completed flips the Status select to Done right away, so the form shows
+// what will be saved. Unticking leaves the status alone for the user to choose.
+function onCompletedChange(completed: boolean | null) {
+  if (completed) form.status = 'Done'
 }
 
 function startCreate() {
@@ -668,11 +679,11 @@ function hitsFor(todo: Todo): string[] {
   padding-bottom: 0;
 }
 
-/* Finished rows sit on the page's field colour, with the text taken down to
-   medium emphasis, so they visibly recede from the open ones without adding a
-   colour that could read as a status. */
+/* Finished rows sit on a shade a step deeper than the page's field colour, with
+   the text taken down to medium emphasis, so they recede from the open rows yet
+   still read as part of the list rather than a gap in it. */
 .todo-row--completed {
-  background-color: var(--bwh-field);
+  background-color: var(--bwh-field-deep);
   color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
 }
 

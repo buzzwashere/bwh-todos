@@ -10,6 +10,9 @@
   --bwh-chrome-rule: rgba(240, 238, 244, 0.16);
 
   --bwh-field: #eeebf2;
+  /* One step deeper than the field, for surfaces that should sit below it
+     (e.g. completed rows) without reading as a hole in the page. */
+  --bwh-field-deep: #e4e0ea;
   --bwh-surface: #ffffff;
   --bwh-ink: #23212b;
   --bwh-rule: #d8d4e0;
