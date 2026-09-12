@@ -124,7 +124,17 @@
             :disabled="!form.completed"
           />
         </template>
-        <div class="d-flex ga-2 justify-end">
+        <div class="d-flex ga-2">
+          <v-btn
+            v-if="editingId !== null"
+            color="error"
+            variant="text"
+            :disabled="saving"
+            @click="askDeleteEditing"
+          >
+            Delete
+          </v-btn>
+          <v-spacer />
           <v-btn variant="text" :disabled="saving" @click="cancelForm">Cancel</v-btn>
           <v-btn type="submit" color="primary" :loading="saving">
             {{ editingId === null ? 'Add' : 'Save' }}
@@ -144,7 +154,21 @@
       class="todo-list"
       lines="two"
     >
-      <v-list-item v-for="todo in sortedTodos" :key="todo.id" :title="todo.title">
+      <!-- The whole row opens the editor. On phones the delete icon is hidden and a
+           long-press pops up a Delete option instead; on wider screens the icon
+           appears on hover. -->
+      <v-list-item
+        v-for="todo in sortedTodos"
+        :key="todo.id"
+        :title="todo.title"
+        class="todo-row"
+        @click="onRowClick(todo)"
+        @pointerdown="onPressStart(todo, $event)"
+        @pointermove="onPressMove($event)"
+        @pointerup="onPressEnd"
+        @pointercancel="onPressEnd"
+        @contextmenu="onContextMenu($event)"
+      >
         <template #subtitle>
           <div>{{ todo.description }}</div>
           <div v-if="filterText && hitsFor(todo).length" class="hits-line">
@@ -190,8 +214,14 @@
             >
               Due: {{ todo.dueDate }}
             </v-chip>
-            <v-btn icon="mdi-pencil" variant="text" size="small" @click="startEdit(todo)" />
-            <v-btn icon="mdi-delete" variant="text" size="small" @click="askDelete(todo)" />
+            <v-btn
+              icon="mdi-delete"
+              variant="text"
+              size="small"
+              class="todo-delete-btn"
+              aria-label="Delete"
+              @click.stop="askDelete(todo)"
+            />
           </div>
         </template>
       </v-list-item>
@@ -199,6 +229,21 @@
         No todos yet.
       </v-list-item>
     </v-list>
+
+    <!-- Long-press popup (phones only), anchored where the finger is. -->
+    <v-menu
+      v-model="showRowMenu"
+      :target="rowMenuTarget"
+    >
+      <v-list density="compact">
+        <v-list-item
+          prepend-icon="mdi-delete"
+          title="Delete"
+          base-color="error"
+          @click="deleteFromRowMenu"
+        />
+      </v-list>
+    </v-menu>
 
     <v-dialog
       :model-value="pendingDelete !== null"
@@ -230,6 +275,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, inject, onMounted, onUnmounted } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
+import { useDisplay } from 'vuetify'
 import type { Todo, TodoInput, Frequency, Status, Priority } from '../types'
 import { createTodosApi } from '../services/todosApi'
 import { todoSettingsKey, type SortBy } from '../todoSettings'
@@ -241,6 +287,10 @@ const statuses: Status[] = ['Not started', 'In Progress', 'Done']
 
 const { getAccessTokenSilently } = useAuth0()
 const api = createTodosApi(() => getAccessTokenSilently())
+
+// `xs` is the same boundary as the 600px media query in the styles below, so the
+// script and the CSS agree on what counts as a phone.
+const { xs } = useDisplay()
 
 const todos = ref<Todo[]>([])
 const loading = ref(true)
@@ -280,6 +330,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  clearPress()
   if (pollTimer) clearInterval(pollTimer)
   document.removeEventListener('visibilitychange', onVisibilityChange)
 })
@@ -538,12 +589,90 @@ function cancelForm() {
   showForm.value = false
 }
 
+// --- row interaction ------------------------------------------------------
+
+const LONG_PRESS_MS = 500
+// A finger that drifts further than this is scrolling, not holding.
+const LONG_PRESS_MOVE_PX = 10
+
+let pressTimer: ReturnType<typeof setTimeout> | undefined
+let pressStart: { x: number; y: number } | null = null
+// Set when a long-press fires so the click the browser synthesizes on release
+// doesn't also open the editor. Reset at the next pointerdown in case no click
+// followed (e.g. the finger came up over the popup).
+let suppressClick = false
+
+const showRowMenu = ref(false)
+const rowMenuTodo = ref<Todo | null>(null)
+const rowMenuTarget = ref<[number, number]>([0, 0])
+
+function onRowClick(todo: Todo) {
+  if (suppressClick) {
+    suppressClick = false
+    return
+  }
+  startEdit(todo)
+}
+
+function onPressStart(todo: Todo, e: PointerEvent) {
+  suppressClick = false
+  clearPress()
+  if (!xs.value || e.pointerType === 'mouse') return
+  pressStart = { x: e.clientX, y: e.clientY }
+  pressTimer = setTimeout(() => {
+    pressTimer = undefined
+    pressStart = null
+    suppressClick = true
+    navigator.vibrate?.(30)
+    rowMenuTodo.value = todo
+    rowMenuTarget.value = [e.clientX, e.clientY]
+    showRowMenu.value = true
+  }, LONG_PRESS_MS)
+}
+
+function onPressMove(e: PointerEvent) {
+  if (!pressStart) return
+  const dx = e.clientX - pressStart.x
+  const dy = e.clientY - pressStart.y
+  if (Math.hypot(dx, dy) > LONG_PRESS_MOVE_PX) clearPress()
+}
+
+function onPressEnd() {
+  clearPress()
+}
+
+function clearPress() {
+  if (pressTimer) clearTimeout(pressTimer)
+  pressTimer = undefined
+  pressStart = null
+}
+
+// Android surfaces its own context menu on a long-press; ours replaces it.
+function onContextMenu(e: Event) {
+  if (xs.value) e.preventDefault()
+}
+
+function deleteFromRowMenu() {
+  showRowMenu.value = false
+  if (rowMenuTodo.value) askDelete(rowMenuTodo.value)
+}
+
 // --- delete ---------------------------------------------------------------
 
 const pendingDelete = ref<Todo | null>(null)
 
 function askDelete(todo: Todo) {
   pendingDelete.value = todo
+}
+
+function askDeleteEditing() {
+  const todo = todos.value.find((t) => t.id === editingId.value)
+  if (todo) {
+    askDelete(todo)
+  } else {
+    fail(null, 'This todo no longer exists')
+    cancelForm()
+  }
 }
 
 async function confirmDelete() {
@@ -553,6 +682,8 @@ async function confirmDelete() {
   try {
     await api.remove(todo.id)
     todos.value = todos.value.filter((t) => t.id !== todo.id)
+    // Deleted from inside its own edit form: nothing is left to edit.
+    if (editingId.value === todo.id) cancelForm()
   } catch (err) {
     fail(err, 'Failed to delete todo')
   }
@@ -625,7 +756,33 @@ function hitsFor(todo: Todo): string[] {
   max-width: 260px;
 }
 
+/* Wider than a phone: the trash can only shows while the row is hovered (or the
+   button itself is keyboard-focused). It keeps its width so nothing shifts. */
+@media (min-width: 601px) {
+  .todo-delete-btn {
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .todo-row:hover .todo-delete-btn,
+  .todo-delete-btn:focus-visible {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 600px) {
+  /* Phones have no hover; deleting is a long-press on the row instead. */
+  .todo-delete-btn {
+    display: none;
+  }
+
+  /* Holding a finger on the row must not start a text selection or the iOS callout. */
+  .todo-row {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
   .todos-content {
     padding: 1rem;
   }
