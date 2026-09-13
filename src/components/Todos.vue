@@ -21,7 +21,9 @@
       </div>
     </v-alert>
 
-    <div class="todos-toolbar d-flex align-center mb-4 ga-2">
+    <!-- Hidden while the create/edit form is open; the form has the page to
+         itself, like the list below. -->
+    <div v-if="!showForm" class="todos-toolbar d-flex align-center mb-4 ga-2">
       <v-btn
         color="primary"
         prepend-icon="mdi-plus"
