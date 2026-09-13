@@ -680,6 +680,14 @@ function hitsFor(todo: Todo): string[] {
   min-width: 0;
 }
 
+/* Tighten the gap between the flag column and the title column. Vuetify's
+   default prepend spacer is 32px; 12px pulls the title in closer. On mobile the
+   indent that aligns the chip/description rows under the title is kept in step
+   (24px icon + 12px spacer = 36px, via --todo-indent below). */
+.todo-list :deep(.v-list-item__prepend > .v-list-item__spacer) {
+  width: 12px !important;
+}
+
 .todos-filter {
   max-width: 260px;
 }
@@ -749,6 +757,9 @@ function hitsFor(todo: Todo): string[] {
     flex-wrap: wrap;
     align-items: flex-start;
     padding-block: 12px;
+    /* Indent for the chip and description rows so they line up under the title:
+       the flag icon (24px) plus the tightened prepend spacer (12px). */
+    --todo-indent: 36px;
   }
 
   .todo-list :deep(.v-list-item__content) {
@@ -777,13 +788,14 @@ function hitsFor(todo: Todo): string[] {
   }
 
   /* These two blocks each take a full row of their own, indented to line up under
-     the title. The indent has to come out of the basis: 100% plus a 56px margin
-     is 56px wider than the row, which is what lets the list scroll sideways. */
+     the title. The indent has to come out of the basis: 100% plus the indent
+     margin would be that much wider than the row, which is what would let the
+     list scroll sideways, so the basis subtracts it back out. */
   .todo-list :deep(.v-list-item__append) {
     order: 3;
-    flex: 0 0 calc(100% - 56px);
+    flex: 0 0 calc(100% - var(--todo-indent));
     min-width: 0;
-    margin-inline-start: 56px;
+    margin-inline-start: var(--todo-indent);
     margin-inline-end: 0;
     padding-top: 0;
     /* Breathing room between the title and the chip row. */
@@ -792,9 +804,9 @@ function hitsFor(todo: Todo): string[] {
 
   .todo-list :deep(.v-list-item-subtitle) {
     order: 4;
-    flex: 0 0 calc(100% - 56px);
+    flex: 0 0 calc(100% - var(--todo-indent));
     min-width: 0;
-    margin-inline-start: 56px;
+    margin-inline-start: var(--todo-indent);
     padding-top: 0;
     /* ...and between the chips and the description. */
     margin-top: 6px;
