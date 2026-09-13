@@ -669,6 +669,17 @@ function hitsFor(todo: Todo): string[] {
   white-space: normal;
 }
 
+/* Let long titles wrap instead of truncating with an ellipsis. The title lives
+   in the list item's content column (a separate grid track from the #prepend
+   flag icon), and min-width: 0 lets it shrink to that track's width, so wrapped
+   lines stay within the title column rather than running under the flag. */
+.todo-list :deep(.v-list-item-title) {
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
 .todos-filter {
   max-width: 260px;
 }
