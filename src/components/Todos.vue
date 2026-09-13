@@ -520,10 +520,24 @@ function formToInput(): TodoInput {
   return toInput({ ...form })
 }
 
-// Ticking Completed flips the Status select to Done right away, so the form shows
-// what will be saved. Unticking leaves the status alone for the user to choose.
+// Today as YYYY-MM-DD in local time, the format the date input expects. (Built
+// from local parts rather than toISOString(), which would shift near midnight.)
+function todayIsoDate(): string {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+// Ticking Completed flips the Status select to Done and stamps the completion
+// date with today, so the form shows what will be saved. Unticking clears the
+// date back to its default and leaves the status alone for the user to choose.
 function onCompletedChange(completed: boolean | null) {
-  if (completed) form.status = 'Done'
+  if (completed) {
+    form.status = 'Done'
+    form.completedAt = todayIsoDate()
+  } else {
+    form.completedAt = ''
+  }
 }
 
 function startCreate() {
